@@ -54,6 +54,7 @@ async function runPrompt(system, user) {
 
     return response.choices[0].message.content;
   } catch (error) {
+      console.log(response)
     console.error("Error in runPrompt:", error);
     // Handle specific OpenAI errors if you want more granular error reporting
     if (error.response) {
@@ -81,16 +82,7 @@ async function summarizeFile(file) {
     \`\`\`json
     {
       "summary": "string", // A one or two-line summary of the file's purpose and functionality.
-      "keywords": [string], // List of keywords (maximum 6 items)
-      "nodes": [ // An array of objects, where each object represents a significant element (function, class, variable, etc.) in the file.
-        {
-          "type": "string", // The type of element (e.g., "function", "class", "variable", "export").
-          "name": "string", // The name of the element (if applicable).
-          "summary": "string", // A one-line summary of the element's functionality or purpose.
-          "keywords": [string], // List of keywords (maximum 6 items)
-          "loc": [number, number] // start and end line of the element in the file.
-        }
-        // ... more nodes
+      "keywords": [string], // List of keywords, each keyword represents a significant element in the file.
       ]
     }
     \`\`\`
@@ -102,7 +94,7 @@ async function summarizeFile(file) {
 ## Considerations:
   Do not add unnecessary sections like importing some libraries/files, or variable definition, or local functions...
   Only index user features which will be exported or is important. 
-  summary should be descriptive and define what does this file/node do. 
+  summary should be descriptive and define what does this file do. 
   Your goal is to generate document which will be used by another LLM to find the most related files from user's prompt
   keywords are used later to search for related codes.
 
@@ -115,16 +107,7 @@ async function summarizeFile(file) {
 \`\`\`json
 {
   "summary": "Provides utility functions for mathematical operations.",
-  "keywords": ["utilities", "add", "arithmetic"],
-  "nodes": [
-    {
-      "type": "function",
-      "name": "add",
-      "summary": "Adds two numbers together.",
-      "keywords" ["add", "util", "math"],
-      "loc": [1, 4]
-    }
-  ]
+  "keywords": ["utilities", "add", "arithmetic", "math"],
 }
 \`\`\`
 
@@ -137,11 +120,12 @@ async function summarizeFile(file) {
 **Content:** ${content}
 `
     );
+    
     if (!result) {
       console.warn(`Skipping file ${file} due to prompt failure.`);
       return null; // or throw error
     }
-    return result;
+  return JSON.parse(result);
   } catch (error) {
     console.error(`Error processing file ${file}:`, error);
     return null; // or throw error
@@ -167,7 +151,7 @@ async function index() {
 
     }
 
-  const memory = [];
+  const memory = {};
 
   for (const file of files) {
     console.log(`Processing file: ${file}`);
@@ -175,9 +159,7 @@ async function index() {
     if (result) {
       try {
         // Attempt to parse the returned JSON. If it fails, it indicates a problem with the LLM's output.
-        const parsedResult = JSON.parse(result);
-        parsedResult.file = file;
-        memory.push(parsedResult);
+        memory[file] = result;
       } catch (parseError) {
         console.error(
           `Error parsing JSON from file ${path + file}:`,
@@ -185,17 +167,13 @@ async function index() {
         );
         console.error("Raw LLM Output:", result); // Log the raw output for debugging
         // You might want to push a fallback object to memory, or skip the file, depending on your needs.
-        memory.push({
-          name: file,
-          summary: "Failed to generate a valid summary.",
-          error: "JSON parsing error",
-        }); // or continue;
+        memory[file] = "COULDN'T LOAD FILE CONTENT"; // or continue;
       }
     }
   }
 
   try {
-    writeFileSync(".llm-index.md", formatMemory(memory));
+    writeFileSync(".llm-index.json", JSON.stringify(memory, null, 4));
     console.log("Index file created successfully.");
   } catch (writeError) {
     console.error("Error writing to .llm-index.json:", writeError);
@@ -207,42 +185,23 @@ function formatMemory(memory) {
 
 This section is the list of available files in current directory
 
-nodes are formatted like this: 
-[type] name - summary (keywords)
-
 `
-
-
-    for(let file of memory) {
-        console.log('processing ' + file.file)
+    for(let key in memory) {
+        console.log('processing ' + key)
         result += `
-* **${file.file}**:
-    Summary: ${file.summary}
-    Keywords: ${file.keywords}
-    Nodes: 
-${file.nodes.map(node => {
-        return `         * [${node.type}] ${node.name} - ${node.summary} (${node.keywords})`
-    }).join('\n')}
-
+### **${key}**:
+    Summary: ${memory[key].summary}
+    Keywords: ${memory[key].keywords}
 `
     }
 
     result += '---- end of files ----'
     return result
 } 
-//         * [function] add - Add two numbers together (abc, def, ghi)
 
-async function analyzePrompt(prompt) {
-    // goal of this function is to analyze user's prompt and choose relaed files to pass to llm in next step. (most related files to the user's request) index of all available files are available in llmIndex variable
-
-}
-
-// writeFileSync('.llm-index.md', 
-// formatMemory(JSON.parse(readFileSync('./.llm-index.json', 'utf-8')))
-// )
 function readMemory() {
-    if(existsSync('.llm-index.md')) {
-        return readFileSync('./.llm-index.md', 'utf-8')
+    if(existsSync('.llm-index.json')) {
+        return formatMemory(JSON.parse(readFileSync('./.llm-index.json', 'utf-8')))
     } else {
         console.log("llm index doesn't exists, run current command only with index argument")
         process.exit(0)
@@ -254,7 +213,7 @@ function getRequiredFiles(memory, prompt) {
 Object should have "files" key which is an array.
 if list of available files are small, you can request all files. you should not request more than 6 files.
 
-only include files which are available in the list, don't return files which are not exist. return empty array if there is no file in the project.
+IMPORTANT: only include files which are available in the files list, don't return files which are not exist. return empty array if there is no file in the project. 
 
 ${memory}
 
@@ -270,7 +229,11 @@ output: {files: ["main.js", "helpers/auth.js", "helpers/hash.js"]}
 }
 
 const commands = `
-* Write(file, value) -  write value to file.  
+* Write(file, value) -  write value to file. 
+    - to update an existing file, you should write entire file content, otherwise file content will be removed.  
+    - Even if you want to add a single line, you should return entire file content.
+    - If you want to update a file, don't change it's entire structure, only add minimal changes to do your task.
+
 * Echo(message) - Tell something to user like instructions, message or ask to run shell commands.
 `
 
@@ -291,6 +254,7 @@ You should return json object with commands field. commands is an array which co
 each command has different arguments which defined above.
 If you want to update a file, you should always write entire file, otherwise file would break. 
 Do not use placeholder comments for user to write skipped parts of the code. Always write entire file.
+for Echo command you can write up to 2 paragraphs.
 
 Example:
 input: write hello world app in js.
@@ -323,9 +287,10 @@ async function run() {
     const runIndex = process.argv.indexOf('run')
     const prompt = process.argv[runIndex + 1]
 
-    const filesResponse = JSON.parse(await getRequiredFiles(memory, prompt))
+    console.log(memory)
 
-    console.log(filesResponse)
+    const filesResponse = JSON.parse(await getRequiredFiles(memory, prompt))
+    console.log("LLM needs these files: ", filesResponse.files)
     let files = []
     for(let file of filesResponse.files) {
         files.push({name: file, content: readFileSync(file, 'utf-8')})
@@ -338,6 +303,8 @@ async function run() {
         if(command.command == 'Write') {
             writeFileSync(command.file, command.value)
             console.log("wrote file: ", command.file)
+            // index the file
+            indexFile(command.file)
         }
         if(command.command == 'Echo') {
             console.log('[ECHO]: ' + command.message)
@@ -349,26 +316,19 @@ async function run() {
 
 }
 
+async function indexFile(file) {
+    const fileSummary = await summarizeFile(file)
+
+    const memory = JSON.parse(readFileSync('./.llm-index.json', 'utf-8'))
+
+    memory[file] = fileSummary;
+
+    writeFileSync('./.llm-index.json', JSON.stringify(memory, null, 4))
+
+}
+
 if(mode == 'index') {
     index();
 } else if(mode == 'run') {
     run()
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
