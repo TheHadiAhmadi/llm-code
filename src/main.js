@@ -49,7 +49,6 @@ async function runPrompt(system, user) {
 
     return response.choices[0].message.content;
   } catch (error) {
-    console.log(response);
     console.error("Error in runPrompt:", error);
     if (error.response) {
       console.error(
@@ -115,7 +114,7 @@ async function index() {
   }
 
   try {
-    writeFileSync(".llm-index.json", JSON.stringify(memory, null, 4));
+    writeFileSync(".llm-index.json", JSON.stringify({ files: memory, prompts: [] }, null, 4));
     console.log("Index file created successfully.");
   } catch (writeError) {
     console.error("Error writing to .llm-index.json:", writeError);
@@ -123,9 +122,15 @@ async function index() {
 }
 
 function formatMemory(memory) {
+  if (!memory.files) {
+    memory = {
+      files: memory,
+      prompts: []
+    }
+  }
   let result = `## Project files\n\nThis section is the list of available files in current directory\n\n`;
-  for (let key in memory) {
-    result += `\n### **${key}**:\n    Summary: ${memory[key].summary}\n    Keywords: ${memory[key].keywords}\n`;
+  for (let key in memory.files) {
+    result += `\n### **${key}**:\n    Summary: ${memory.files[key].summary}\n    Keywords: ${memory.files[key].keywords}\n`;
   }
   result += "---- end of files ----";
   return result;
@@ -191,7 +196,9 @@ async function run() {
     if (command.command == "Write") {
       writeFileSync(command.file, command.value);
       console.log("wrote file: ", command.file);
-      indexFile(command.file);
+      savePrompt(prompt)
+      indexFile(command.file, prompt);
+
     }
     if (command.command == "Echo") {
       console.log("[ECHO]: " + command.message);
@@ -199,12 +206,25 @@ async function run() {
   }
 }
 
+async function savePrompt(prompt) {
+  let memory = JSON.parse(readFileSync("./.llm-index.json", "utf-8"));
+
+  if (!memory.files) {
+    memory = {
+      files: memory,
+      prompts: []
+    }
+  }
+  memory.prompts.push(prompt)
+
+  writeFileSync("./.llm-index.json", JSON.stringify(memory, null, 4))
+}
 async function indexFile(file) {
   const fileSummary = await summarizeFile(file);
 
   const memory = JSON.parse(readFileSync("./.llm-index.json", "utf-8"));
 
-  memory[file] = fileSummary;
+  memory.files[file] = fileSummary;
 
   writeFileSync("./.llm-index.json", JSON.stringify(memory, null, 4));
 }
