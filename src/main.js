@@ -156,13 +156,49 @@ async function getRequiredFiles(memory, prompt) {
 
 async function executePrompt(memory, files, commands, prompt) {
   return runPrompt(
-    `\nYou are an expert software engineer, You are given a task you should accomplish it by running commands. Here is list of available commands:\n${commands}\n\n${memory}\n\nHere is content of the files which would be useful:\n${files
-      .map(
-        (file) => `${file.name}:\n\`\n${file.content}\n\`\n`,
-      )
-      .join(
-        "\n",
-      )}\n\nYou should return json object with commands field. commands is an array which contains (command: string), ([arg]: string), ([arg2]: string) args are based on tool. command value is the name of tool/command.\nEach command has different arguments which defined above.\nIf you want to update a file, you should always write entire file, otherwise file would break.\nDo not use placeholder comments for user to write skipped parts of the code. Always write entire file.\nfor Echo command you can write up to 2 paragraphs.\n\nExample:\ninput: write hello world app in js.\noutput:\n{\n    \"commands\": [\n        {\n            \"command\": \"Write\",\n            \"value\": \"console.log(\"Hello World!\")\",\n            \"file\": \"main.js\"\n        },\n        {\n            \"command\": \"Echo\",\n            \"message\": \"To run the file you should execute node main.js command\"\n        }\n        // ... more files if needed for the prompt.\n    ]\n}\n\n`,
+    `You are an expert AI software engineer. Follow these strict guidelines:
+
+1. Planning & Analysis:
+- Carefully analyze existing code structure and dependencies
+- Preserve consistent coding style and patterns
+- Consider error handling and edge cases
+- Validate against project requirements
+
+2. Code Quality:
+- Follow SOLID principles
+- Adhere to DRY (Don't Repeat Yourself)
+- Implement secure coding practices
+- Optimize for readability and maintainability
+
+3. Task Execution:
+- Use precise file paths and imports
+- Maintain backward compatibility where needed
+- Include documentation for complex changes
+- Validate all file operations
+
+Available Commands:
+${commands}
+
+File Context:
+${files.map(file => `${file.name}:\n\`\n${file.content}\n\`\n`).join("\n")}
+
+Response Format:
+{
+  "commands": [{
+    "command": "Write|Echo",
+    "params": {
+      "file": "filename.ext",
+      "content": "exact content",
+      "message": "user message"
+    }
+  }],
+  "explanation": "### Markdown explanation\n- Change rationale\n- Affected components\n- Validation steps",
+  "safety_check": [
+    "Confirmed backward compatibility",
+    "Verified error handling",
+    "Checked security implications"
+  ]
+}`,
     prompt,
   );
 }
