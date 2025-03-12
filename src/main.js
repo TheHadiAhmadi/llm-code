@@ -1,8 +1,87 @@
 #!/usr/bin/env node
+import 'dotenv/config'
 
+import { ChatPromptTemplate } from '@langchain/core/prompts'
+import { ChatOpenAI } from '@langchain/openai'
 import { glob } from "glob";
-import { OpenAI } from "openai";
 import { existsSync, readFileSync, statSync, writeFileSync } from "fs";
+import { dirname, join } from 'path'
+import { fileURLToPath } from "url";
+import { program } from 'commander';
+import path from 'path'
+
+program
+  .name('llm-code')
+  .description('A CLI tool for project indexing and running with prompts.')
+  .version('1.0.0');
+
+// Index Mode
+program
+  .command('index')
+  .description('Indexes files in a project.')
+  .option('--project <path>', 'Path to the project', process.cwd())
+  .option('--files <paths>', 'Comma-separated list of files to index', "**/*") 
+  .action((options) => {
+    const projectPath = options.project;
+    const files = options.files;
+
+    if (!projectPath) {
+      console.error('Error: --project is required for index mode.');
+      process.exit(1);
+    }
+
+    if (!existsSync(projectPath)) {
+      console.error(`Error: Project path "${projectPath}" does not exist.`);
+      process.exit(1);
+    }
+
+    if(files) {
+      index(projectPath, files);
+    }
+    
+    
+  });
+
+// Run Mode
+program
+  .command('run')
+  .description('Runs a task with a prompt.')
+  .option('--project <path>', 'Path to the project', process.cwd())
+  .option('--prompt <string>', 'Prompt for the task')
+  .action((options) => {
+    const projectPath = options.project;
+    const prompt = options.prompt;
+
+    if (!projectPath) {
+      console.error('Error: --project is required for run mode.');
+      process.exit(1);
+    }
+
+    if (!existsSync(projectPath)) {
+      console.error(`Error: Project path "${projectPath}" does not exist.`);
+      process.exit(1);
+    }
+
+    if (!prompt) {
+      console.error('Error: --prompt is required for run mode.');
+      process.exit(1);
+    }
+
+    console.log(`Running task on project: ${projectPath}`);
+    console.log(`Prompt: ${prompt}`);
+
+    // Add your task execution logic here
+    run(projectPath, prompt); // Placeholder for actual task execution logic
+  });
+
+program.parse(process.argv);
+
+
+
+const llm = new ChatOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  model: process.env.OPENAI_MODEL
+})
 
 let patterns = "";
 let mode = "";
@@ -20,82 +99,41 @@ if (args.includes("index")) {
   process.exit(0);
 }
 
-const openai = new OpenAI();
-
-const MODEL = "openai/gpt-4o-mini";
-const RESPONSE_FORMAT = { type: "json_object" };
-
-async function runPrompt(system, user) {
-  try {
-    const options = {
-      model: MODEL,
-      response_format: RESPONSE_FORMAT,
-      messages: [
-        { role: "system", content: [{ type: "text", text: system }] },
-        { role: "user", content: [{ type: "text", text: user }] },
-      ],
-    };
-    const response = await openai.chat.completions.create(options);
-
-    if (!response.choices || response.choices.length === 0) {
-      console.error("No choices returned from OpenAI API.");
-      return null;
-    }
-
-    if (!response.choices[0].message || !response.choices[0].message.content) {
-      console.error("No message content returned from OpenAI API.");
-      return null;
-    }
-
-    return response.choices[0].message.content;
-  } catch (error) {
-    console.error("Error in runPrompt:", error);
-    if (error.response) {
-      console.error(
-        "OpenAI API Error details:",
-        error.response.status,
-        error.response.data,
-      );
-    }
-    return null;
-  }
-}
 
 async function summarizeFile(file) {
   try {
     const content = readFileSync(file, "utf-8");
-    const prompt = `You are an expert AI file analyzer. Your task is to analyze the content of a given file and provide a detailed JSON-formatted summary including comprehensive information about the file, such as its purpose, functionalities, significant functions/classes, and any important interactions with other components.\n\n## Instructions:\n\n1. **Analyze the file content:** Carefully read the content of the provided file.\n2. **Extract key data:** Identify the most important information within the file, including classes, functions, variables, exports, and the overall purpose of the file.\n3. **Create a JSON object:** Structure your analysis into a JSON object with the following fields:\n\`{\n  \"summary\": \"string\", // A concise summary of the file's purpose and functionality.\n  \"keywords\": [string], // List of keywords, each representing a significant element in the file.\n}\`\n4. **Be Concise:** Keep summaries brief and to the point, but include essential details.\n5. **Focus on Functionality:** The 'summary' field should describe *what* the code does.\n6. **Return JSON Only:** Your output should *only* be the JSON object. Do not include any additional text or conversational elements.\n\n## Considerations:\nDo not add unnecessary sections like imports or local functions. Focus on user-facing features. Your goal is to generate a document to be used by another LLM to find related files from user prompts. Keywords will be used for later code searches.\n\n## Example:\n\n**Input:**  (Content of a file named \`utils.js\` containing <actual source of the file>)\n\n**Output:**\n\`{\n  \"summary\": \"Provides utility functions for mathematical operations.\",\n  \"keywords\": [\"utilities\", \"add\", \"arithmetic\", \"math\"]}\``; 
 
     const result = await runPrompt(
-      prompt,
-      `Analyze the following file:\n**File:** ${file}\n**Content:** ${content}\n`,
+      'summarize-file',
+      'Analyze the following file:\n**File:** {file}\n**Content:** ```{content}```',
+      { file, content }
     );
 
     if (!result) {
       console.warn(`Skipping file ${file} due to prompt failure.`);
       return null;
     }
-    return JSON.parse(result);
+    return result;
   } catch (error) {
     console.error(`Error processing file ${file}:`, error);
-    return null;
+      return {keywords: [], summary: "Couldn't generate summary. CHECK file based on it's name."}; // Or throw the error, depending on your error handling strategy
   }
 }
 
-async function index() {
+async function index(projectPath, patterns) {
   const patternArray = patterns.split(",").map((pattern) => pattern.trim());
   let files = [];
-  const path = process.cwd() + "/";
-
+  
   for (var pattern of patternArray) {
     const matches = await glob(pattern, {
       ignore: "node_modules/**",
       absolute: false,
-      cwd: process.cwd(),
+      cwd: projectPath,
       posix: true,
     });
     for (const match of [...new Set(matches)]) {
-      const fullPath = path + match;
+      const fullPath = path.join(projectPath, match);
       const stats = statSync(fullPath);
       if (stats.isFile() && stats.size <= 50 * 1024) {
         files.push(match);
@@ -114,7 +152,7 @@ async function index() {
   }
 
   try {
-    writeFileSync(".llm-index.json", JSON.stringify({ files: memory, prompts: [] }, null, 4));
+    writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify({ files: memory, prompts: [] }, null, 4));
     console.log("Index file created successfully.");
   } catch (writeError) {
     console.error("Error writing to .llm-index.json:", writeError);
@@ -136,9 +174,9 @@ function formatMemory(memory) {
   return result;
 }
 
-function readMemory() {
-  if (existsSync(".llm-index.json")) {
-    return formatMemory(JSON.parse(readFileSync("./.llm-index.json", "utf-8")));
+function readMemory(projectPath) {
+  if (existsSync(path.join(projectPath, ".llm-index.json"))) {
+    return formatMemory(JSON.parse(readFileSync(path.join(projectPath, ".llm-index.json"), "utf-8")));
   } else {
     console.log(
       "llm index doesn't exists, run current command only with index argument",
@@ -147,66 +185,60 @@ function readMemory() {
   }
 }
 
-async function getRequiredFiles(memory, prompt) {
-  return runPrompt(
-    `You are given a prompt text, and list of available files, you should decide content of which files do you need to run the task. return List of needed files (names) as json object. \nObject should have \"files\" key which is an array.\nif list of available files are small, you can request all files. you should not request more than 6 files.\n\nIMPORTANT: only include files which are available in the files list, don't return files which are not exist. return empty array if there is no file in the project. \n\n${memory}\n\n## output format\n{\"files\": [\"file1\", \"file2\", \"file3\"]}\n\n## Example:\ninput: add jwt authentication for the server\noutput: {files: [\"main.js\", \"helpers/auth.js\", \"helpers/hash.js\"]}\n\n`,
-    prompt,
-  );
+async function runPrompt(name, userPrompt, context) {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const promptPath = join(__dirname, `../prompts/${name}.md`); // Assuming prompts are .txt files
+
+  try {
+    console.log('[prompt]', name, userPrompt)
+    const content = readFileSync(promptPath, 'utf-8');
+
+    const messagesTemplate = ChatPromptTemplate.fromMessages([
+      [
+        'system',
+        content
+      ],
+      [
+        'user',
+        userPrompt
+      ]
+    ]);
+    const messages = await messagesTemplate.invoke(context)
+    const result = await llm.invoke(messages).then(res =>
+      res.content.toString().replace('```json', '').replace('```', '').trim()
+    )
+
+    return JSON.parse(result)
+  } catch (error) {
+    console.log(error)
+    console.error(`Error reading prompt file ${name}.md:`, error);
+    throw error
+  }
+}
+
+async function getRequiredFiles(memory, userPrompt) {
+  const resp = await runPrompt('get-required-files', userPrompt, { memory })
+  return resp
 }
 
 async function executePrompt(memory, files, commands, prompt) {
-  return runPrompt(
-    `You are an expert AI software engineer. Follow these strict guidelines:
 
-1. Planning & Analysis:
-- Carefully analyze existing code structure and dependencies
-- Preserve consistent coding style and patterns
-- Consider error handling and edge cases
-- Validate against project requirements
+  const context = {
+    memory,
+    commands,
+    files: files.map((file) => `${file.name}:
+\`\`\`
+${file.content}
+\`\`\`
+`).join("\n")
+  }
 
-2. Code Quality:
-- Follow SOLID principles
-- Adhere to DRY (Don't Repeat Yourself)
-- Implement secure coding practices
-- Optimize for readability and maintainability
-
-3. Task Execution:
-- Use precise file paths and imports
-- Maintain backward compatibility where needed
-- Include documentation for complex changes
-- Validate all file operations
-
-Available Commands:
-${commands}
-
-File Context:
-${files.map(file => `${file.name}:\n\`\n${file.content}\n\`\n`).join("\n")}
-
-Response Format:
-{
-  "commands": [{
-    "command": "Write|Echo",
-    "params": {
-      "file": "filename.ext",
-      "content": "exact content",
-      "message": "user message"
-    }
-  }],
-  "explanation": "### Markdown explanation\n- Change rationale\n- Affected components\n- Validation steps",
-  "safety_check": [
-    "Confirmed backward compatibility",
-    "Verified error handling",
-    "Checked security implications"
-  ]
-}`,
-    prompt,
-  );
+  return runPrompt('main-execute', prompt, context)
 }
 
-async function run() {
-  const memory = readMemory();
-  const runIndex = process.argv.indexOf("run");
-  const prompt = process.argv[runIndex + 1];
+async function run(projectPath, prompt) {
+  const memory = readMemory(projectPath);
 
   const commands = `
     * Write(file, value) - Writes content to a file.
@@ -217,23 +249,21 @@ async function run() {
     * Echo(message) - Communicates information to the user.  Use this to provide instructions, relay messages, or ask the user to run shell commands.
     `;
 
-  const filesResponse = JSON.parse(await getRequiredFiles(memory, prompt));
+  const filesResponse = await getRequiredFiles(memory, prompt);
   console.log("LLM needs these files: ", filesResponse.files);
   let files = [];
   for (let file of filesResponse.files) {
-    files.push({ name: file, content: readFileSync(file, "utf-8") });
+    files.push({ name: file, content: readFileSync(path.join(projectPath, file), "utf-8") });
   }
 
-  const result = JSON.parse(
-    await executePrompt(memory, files, commands, prompt),
-  );
+  const result = await executePrompt(memory, files, commands, prompt);
 
   for (let command of result.commands) {
     if (command.command == "Write") {
-      writeFileSync(command.file, command.value);
-      console.log("wrote file: ", command.file);
-      savePrompt(prompt)
-      indexFile(command.file, prompt);
+      writeFileSync(path.join(projectPath, command.file), command.value);
+      console.log("[Write]: ", path.join(projectPath, command.file));
+      savePrompt(projectPath, prompt)
+      indexFile(projectPath, command.file);
 
     }
     if (command.command == "Echo") {
@@ -242,8 +272,8 @@ async function run() {
   }
 }
 
-async function savePrompt(prompt) {
-  let memory = JSON.parse(readFileSync("./.llm-index.json", "utf-8"));
+async function savePrompt(projectPath, prompt) {
+  let memory = JSON.parse(readFileSync(path.join(projectPath, ".llm-index.json"), "utf-8"));
 
   if (!memory.files) {
     memory = {
@@ -253,20 +283,25 @@ async function savePrompt(prompt) {
   }
   memory.prompts.push(prompt)
 
-  writeFileSync("./.llm-index.json", JSON.stringify(memory, null, 4))
-}
-async function indexFile(file) {
-  const fileSummary = await summarizeFile(file);
-
-  const memory = JSON.parse(readFileSync("./.llm-index.json", "utf-8"));
-
-  memory.files[file] = fileSummary;
-
-  writeFileSync("./.llm-index.json", JSON.stringify(memory, null, 4));
+  writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify(memory, null, 4))
 }
 
-if (mode == "index") {
-  index();
-} else if (mode == "run") {
-  run();
+async function indexFile(projectPath, file) {
+  try {
+    const fileSummary = await summarizeFile(file);
+    const memory = JSON.parse(readFileSync(path.join(projectPath, ".llm-index.json"), "utf-8"));
+    memory.files[file] = fileSummary;
+    writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify(memory, null, 4));
+  
+  } catch(error) {
+
+    return {keywords: [], summary: "Couldn't generate summary. CHECK file based on it's name."}; // Or throw the error, depending on your error handling strategy
+  }
+
 }
+
+// if (mode == "index") {
+//   index();
+// } else if (mode == "run") {
+//   run();
+// }

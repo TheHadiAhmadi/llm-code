@@ -1,64 +1,79 @@
 {
-    "src/main.js": {
-        "summary": "This script indexes project files and allows for executing tasks using prompts, utilizing the OpenAI API for summarization and task execution.",
-        "keywords": [
-            "index",
-            "run",
-            "OpenAI",
-            "summarizeFile",
-            "runPrompt",
-            "glob",
-            "memory",
-            "prompt"
-        ]
+    "files": {
+        "src/main.js": {
+            "summary": "CLI tool for indexing project files and executing tasks using prompts, leveraging OpenAI for code analysis and modification.",
+            "keywords": [
+                "CLI",
+                "indexing",
+                "task execution",
+                "OpenAI integration",
+                "file operations"
+            ]
+        },
+        "TASKS.md": {
+            "summary": "Defines a system to index codebases for LLM-assisted tasks (documentation, review, code generation) by creating structured metadata and processing user prompts to select relevant files.",
+            "keywords": [
+                "indexing",
+                "LLM context selection",
+                "codebase analysis",
+                "structured JSON output",
+                "user prompt processing"
+            ]
+        },
+        "package.json": {
+            "summary": "Configures a Node.js CLI tool for interacting with LLMs using LangChain and OpenAI, including command-line handling and environment management.",
+            "keywords": [
+                "cli",
+                "langchain",
+                "openai",
+                "commander",
+                "llm"
+            ]
+        },
+        "package-lock.json": {
+            "summary": "Manages Node.js project dependencies for a CLI tool integrating AI language models via LangChain and OpenAI.",
+            "keywords": [
+                "dependencies",
+                "langchain",
+                "openai",
+                "CLI",
+                "environment-variables"
+            ]
+        },
+        "prompts/summarize-file.md": {
+            "summary": "Provides instructions for generating JSON metadata to summarize code files for code search purposes.",
+            "keywords": [
+                "code analysis",
+                "JSON metadata",
+                "documentation",
+                "code search",
+                "keywords"
+            ]
+        },
+        "prompts/main-execute.md": {
+            "keywords": [],
+            "summary": "Couldn't generate summary. CHECK file based on it's name."
+        },
+        "prompts/get-required-files.md": {
+            "summary": "Defines a system prompt that determines required files for completing a task based on available project files and returns them as a JSON array.",
+            "keywords": [
+                "system prompt",
+                "file selection",
+                "json response",
+                "required files",
+                "task execution"
+            ]
+        },
+        "prompts/generate-doc.md": {
+            "summary": "Provides a template for generating JSDoc-style documentation comments, including parameter descriptions, return types, and usage examples.",
+            "keywords": [
+                "JSDoc",
+                "documentation",
+                "parameters",
+                "returns",
+                "examples"
+            ]
+        }
     },
-    "TASKS.md": {
-        "summary": "A documentation file outlining a project structured to assist developers with codebase understanding, code review, documentation generation, and task completion using a language model (LLM).",
-        "keywords": [
-            "coding assistant",
-            "code review",
-            "documentation",
-            "indexing",
-            "LLM",
-            "json",
-            "file analysis",
-            "user prompt"
-        ]
-    },
-    "package.json": {
-        "summary": "Configuration file for the llm-code project, specifying metadata, dependencies, and scripts for building and testing the application.",
-        "keywords": [
-            "package.json",
-            "metadata",
-            "dependencies",
-            "scripts",
-            "repository",
-            "openai",
-            "glob"
-        ]
-    },
-    "package-lock.json": {
-        "summary": "The package-lock.json file contains metadata regarding the installed packages for a Node.js project named 'llm-code'. It specifies the exact versions of dependencies and their sub-dependencies required to recreate the project's environment, ensuring consistent installs across various environments.",
-        "keywords": [
-            "package-lock",
-            "dependencies",
-            "npm",
-            "node",
-            "llm-code",
-            "versioning"
-        ]
-    },
-    "README.md": {
-        "summary": "This project provides tools to assist developers in understanding and interacting with a codebase through AI, offering features such as code review, documentation generation, and customized user prompts.",
-        "keywords": [
-            "LLM",
-            "code review",
-            "documentation",
-            "code completion",
-            "developer productivity",
-            "Node.js",
-            "installation",
-            "AI assistance"
-        ]
-    }
+    "prompts": []
 }
