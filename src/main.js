@@ -145,7 +145,7 @@ async function index(projectPath, patterns) {
 
   for (const file of files) {
     console.log(`Processing file: ${file}`);
-    const result = await summarizeFile(file);
+    const result = await summarizeFile(path.join(projectPath, file));
     if (result) {
       memory[file] = result;
     }
@@ -288,7 +288,7 @@ async function savePrompt(projectPath, prompt) {
 
 async function indexFile(projectPath, file) {
   try {
-    const fileSummary = await summarizeFile(file);
+    const fileSummary = await summarizeFile(path.join(projectPath, file));
     const memory = JSON.parse(readFileSync(path.join(projectPath, ".llm-index.json"), "utf-8"));
     memory.files[file] = fileSummary;
     writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify(memory, null, 4));
