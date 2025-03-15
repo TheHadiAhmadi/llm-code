@@ -1,34 +1,37 @@
 {
     "files": {
         "src/main.js": {
-            "summary": "CLI tool for indexing project files and executing tasks using prompts, leveraging OpenAI for code analysis and modification.",
+            "summary": "This file defines a CLI tool for indexing project files and executing tasks based on user prompts using a language model. It supports operations to index files and run commands with contextual prompts, utilizing OpenAI's Chat API for analysis and task execution.",
             "keywords": [
                 "CLI",
                 "indexing",
-                "task execution",
-                "OpenAI integration",
-                "file operations"
-            ]
+                "prompt execution",
+                "file handling",
+                "OpenAI"
+            ],
+            "hash": "0df558eaf34f8b5252a6e91a5cbe0a39ab80e7448e9bd6c9ee04c616e74c275f"
         },
         "TASKS.md": {
-            "summary": "Defines a system to index codebases for LLM-assisted tasks (documentation, review, code generation) by creating structured metadata and processing user prompts to select relevant files.",
+            "summary": "The file outlines a project for a coding assistant that helps developers understand codebases by performing tasks such as code review, documentation generation, and code completion. It includes steps to index project files, analyze user prompts, and structure outputs for an AI model.",
             "keywords": [
+                "coding assistant",
                 "indexing",
-                "LLM context selection",
-                "codebase analysis",
-                "structured JSON output",
-                "user prompt processing"
-            ]
+                "LLM",
+                "user prompt",
+                "JSON output"
+            ],
+            "hash": "07d17fa72c356798cb3b6041ae2461de5a4e82df2fa155916e06e12a8824bf0f"
         },
         "package.json": {
-            "summary": "Configures a Node.js CLI tool for interacting with LLMs using LangChain and OpenAI, including command-line handling and environment management.",
+            "summary": "This file serves as the package descriptor for the 'llm-code' project, detailing metadata such as the main script, dependencies, and repository information for managing the module's lifecycle and integrating with external resources.",
             "keywords": [
-                "cli",
-                "langchain",
-                "openai",
-                "commander",
-                "llm"
-            ]
+                "llm-code",
+                "module",
+                "dependencies",
+                "repository",
+                "scripts"
+            ],
+            "hash": "f3805a93250777eb63ab3d4969764d2570226973f9cda9a3eac08060cdadd146"
         },
         "package-lock.json": {
             "summary": "Manages Node.js project dependencies for a CLI tool integrating AI language models via LangChain and OpenAI.",
@@ -41,38 +44,345 @@
             ]
         },
         "prompts/summarize-file.md": {
-            "summary": "Provides instructions for generating JSON metadata to summarize code files for code search purposes.",
+            "summary": "This file provides guidelines for analyzing another file's content to generate a JSON summary, emphasizing the extraction of important elements like purpose, functionality, and significant classes or functions.",
             "keywords": [
-                "code analysis",
-                "JSON metadata",
+                "file analysis",
+                "JSON summary",
+                "functionality",
                 "documentation",
-                "code search",
-                "keywords"
-            ]
+                "code search"
+            ],
+            "hash": "b18790332e47b33915ef0908d72b1051476c140b9dc8e2d88acb55ca7dd25bfb"
         },
         "prompts/main-execute.md": {
-            "keywords": [],
-            "summary": "Couldn't generate summary. CHECK file based on it's name."
+            "summary": "This file defines the structure and operational guidelines for generating command sequences that solve programming tasks based on natural language inputs. It emphasizes efficiency, correctness, and a systematic approach to formulating solutions.",
+            "keywords": [
+                "commands",
+                "JSON response",
+                "task execution",
+                "programming",
+                "optimization"
+            ],
+            "hash": "8d30d035665bb1d475ec8a46a29f4da9b69764dc3d62c5936c3988a7e60917c4"
         },
         "prompts/get-required-files.md": {
-            "summary": "Defines a system prompt that determines required files for completing a task based on available project files and returns them as a JSON array.",
+            "summary": "This file defines a prompt processing system that determines which files are needed to execute a given task based on a provided list of available files. It outputs a JSON object containing the names of the required files.",
             "keywords": [
-                "system prompt",
                 "file selection",
-                "json response",
-                "required files",
-                "task execution"
-            ]
+                "task execution",
+                "available files",
+                "JSON output",
+                "file filtering"
+            ],
+            "hash": "41d92e7cd50687d7984d9a9d53f2dcd765fab23f2374943abeb543977475c612"
         },
         "prompts/generate-doc.md": {
-            "summary": "Provides a template for generating JSDoc-style documentation comments, including parameter descriptions, return types, and usage examples.",
+            "summary": "This file serves as a documentation template or guide for generating prompts, facilitating structured and consistent prompt creation.",
             "keywords": [
-                "JSDoc",
                 "documentation",
-                "parameters",
-                "returns",
-                "examples"
-            ]
+                "prompts",
+                "template",
+                "guidance",
+                "generation"
+            ],
+            "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "hello.js": {
+            "summary": "This file logs 'hello world' to the console, serving as a simple test or example output.",
+            "keywords": [
+                "console",
+                "log",
+                "hello",
+                "world",
+                "example"
+            ],
+            "hash": "fdbfc7bd27940b250bd17955d592b49f00e4d7c3b606933949c8fe759d707886"
+        },
+        "README.md": {
+            "summary": "This README file outlines a CLI tool for indexing project files and executing prompt-based tasks using AI language models, facilitating documentation generation and code reviews.",
+            "keywords": [
+                "CLI",
+                "indexing",
+                "task execution",
+                "OpenAI",
+                "documentation"
+            ],
+            "hash": "77b5b66379077114cf3d283ce405a8fb7257053f894d26b18f0779bce59a18a1"
+        },
+        "samples/README.md": {
+            "summary": "This README file provides a brief overview of the FluentCMS.WEB.UI.Components, detailing its size in tokens for documentation or content management purposes.",
+            "keywords": [
+                "FluentCMS",
+                "WEB",
+                "UI",
+                "Components",
+                "tokens"
+            ],
+            "hash": "8f8c56b2f84b6ddd9118d60254d27c17debe96ec0465941fa0fc90ebd82959aa"
+        },
+        "samples/Button.md": {
+            "summary": "The Button component in FluentCMS is a versatile UI element that can render as a button or a link with customizable properties such as color, size, type, and attributes, facilitating user interactions in Blazor applications.",
+            "keywords": [
+                "Button",
+                "UI Component",
+                "Customizable",
+                "Blazor",
+                "Tailwind CSS"
+            ],
+            "hash": "bdfbad0d547accf0144131638b683dbe442d9a483319f1447370d28f02a06ea1"
+        },
+        "claude-code/write.md": {
+            "summary": "This file provides instructions for using a tool to write to the local filesystem, ensuring that existing files are overwritten if necessary, and emphasizes the importance of prior verification of file contents and directory existence.",
+            "keywords": [
+                "write",
+                "filesystem",
+                "overwrite",
+                "file verification",
+                "directory"
+            ],
+            "hash": "6e3472e2ac84d0ec21c27805890e2289b4662fbe7b32fd77bbdfba9dde12c406"
+        },
+        "claude-code/topic.md": {
+            "summary": "This file defines a system for analyzing user messages to determine if they indicate a new conversation topic, extracting a succinct title if applicable.",
+            "keywords": [
+                "conversation",
+                "topic",
+                "analysis",
+                "system",
+                "title"
+            ],
+            "hash": "b42e1c7ae71b2f682e8873d41bb2ad7cc8cbd58f21cb11e6368ac0b243dbd0e3"
+        },
+        "claude-code/review.md": {
+            "summary": "This file outlines a structured approach for conducting code reviews on pull requests (PRs), specifying steps to fetch PRs and analyze code quality and potential issues.",
+            "keywords": [
+                "code review",
+                "pull requests",
+                "analysis",
+                "code quality",
+                "suggestions"
+            ],
+            "hash": "173c455aeb0d340a7d1998d412b3450cc1c80350fd5f2fdb2285214ce89ba857"
+        },
+        "claude-code/prompt9.md": {
+            "summary": "This file outlines the steps for an AI assistant to fetch and format comments from a GitHub pull request using the GitHub CLI.",
+            "keywords": [
+                "GitHub",
+                "pull request",
+                "comments",
+                "API",
+                "formatting"
+            ],
+            "hash": "97b955283579eae5c969a0ff433650d34b9a15d7d4f98e8df8deb97334fde12d"
+        },
+        "claude-code/prompt7.md": {
+            "summary": "This document defines a policy for detecting and processing Bash command prefixes used by an AI coding agent, incorporating safety measures to prevent command injection.",
+            "keywords": [
+                "Bash commands",
+                "command injection",
+                "prefix detection",
+                "safety policy",
+                "user confirmation"
+            ],
+            "hash": "44ef724e1434eeacc52def40296d8926f3e959c77a0e915f1fe58ac95755f264"
+        },
+        "claude-code/prompt6.md": {
+            "summary": "This file outlines the procedures for executing bash commands in a secure and controlled environment, focusing on error handling, security checks, command execution, and managing git operations including commits and pull requests.",
+            "keywords": [
+                "bash command execution",
+                "security checks",
+                "git commit",
+                "pull requests",
+                "command handling"
+            ],
+            "hash": "9f2ccb0b17cbdd573d4c85a188d18f8749db1473a1d789f1cd541e4c7fa8e239"
+        },
+        "claude-code/prompt5.md": {
+            "summary": "Generates concise descriptions for command-line commands.",
+            "keywords": [
+                "command description",
+                "CLI",
+                "generate",
+                "user input",
+                "output"
+            ],
+            "hash": "c23291678e9ad9e73e2f77e9afb6b88f7545d21154925232ae9b4d12e2528b93"
+        },
+        "claude-code/prompt3.md": {
+            "summary": "This file provides a system prompt for generating concise issue titles based on user feedback, ensuring clarity and brevity.",
+            "keywords": [
+                "issue title",
+                "user feedback",
+                "system prompt",
+                "concise",
+                "title generation"
+            ],
+            "hash": "69c9541bd04f2efdce034e1072b5e3fbb82d6fa42d02de9013e156e6c0eb8122"
+        },
+        "claude-code/prompt2.md": {
+            "summary": "This file defines an interactive CLI tool that aids users in software engineering tasks while ensuring security by refusing to engage with malicious code. It includes user command functionalities and guidelines for maintaining an effective communication style.",
+            "keywords": [
+                "CLI tool",
+                "user commands",
+                "software engineering",
+                "security",
+                "feedback system"
+            ],
+            "hash": "60c06a6466eb5670b640e289c6683d1c9acc75706fe42b66889803f6b52c3e20"
+        },
+        "claude-code/prompt1.md": {
+            "summary": "This file provides instructions for extracting file paths from command outputs, specifically for commands that read or modify files, and outlines the expected format for responses.",
+            "keywords": [
+                "file paths",
+                "command output",
+                "git diff",
+                "cat",
+                "formatting"
+            ],
+            "hash": "5a72bffaf9f164eea0b7c9da5244b7d67cce52a528d668e826a1f0a93eed3cc3"
+        },
+        "claude-code/prmopt10.md": {
+            "summary": "This file provides a structure for generating summaries of conversations, emphasizing key points to facilitate ongoing discussions.",
+            "keywords": [
+                "summary",
+                "conversation",
+                "focus",
+                "files",
+                "next steps"
+            ],
+            "hash": "cdd55893d93cb02880abdaacb4ef22edc9e225d6651078deb681f81c6e62920a"
+        },
+        "claude-code/plan.md": {
+            "summary": "This file outlines a structured approach for a software architect to analyze technical requirements and generate detailed implementation plans, guiding a junior engineer without writing the actual code.",
+            "keywords": [
+                "implementation plan",
+                "technical requirements",
+                "software architecture",
+                "actionable steps",
+                "core functionality"
+            ],
+            "hash": "7feaf51ad60f0237d2ce793fd902cf4dd892518344ffac121b42c27ce2e712bd"
+        },
+        "claude-code/memory.md": {
+            "summary": "This file provides instructions for adding and organizing memory entries in the CLAUDE.md file, outlining specific guidelines for user preferences and project-specific sections.",
+            "keywords": [
+                "memory management",
+                "user preferences",
+                "project sections",
+                "FileWriteTool",
+                "documentation"
+            ],
+            "hash": "0867536f60b014c1a3cd4bad04fa309ffddcbd1d19d0a21bbfba86d796e20e60"
+        },
+        "claude-code/main.md": {
+            "summary": "This file provides guidelines on how to launch and effectively use an agent tool for searching keywords, files, and class definitions. It emphasizes the use of different tools based on the type of search and offers best practices for usage, including performance optimization through concurrent agent launches.",
+            "keywords": [
+                "agent tool",
+                "search",
+                "file path",
+                "performance",
+                "class definition"
+            ],
+            "hash": "5ef3b8a599ef8a86fe735c97f29cd859cecb95004b3ae9786dd234b2b881918b"
+        },
+        "claude-code/interrupted.md": {
+            "summary": "This file contains instructions for handling user interruptions during tool usage, specifying actions to halt processes until further user input is received.",
+            "keywords": [
+                "user interruption",
+                "tool usage",
+                "process halt",
+                "user input",
+                "action rejection"
+            ],
+            "hash": "7465b79353de21513d2942bc73b0ab37f56d46a7ff70859131060814eb233eb1"
+        },
+        "claude-code/globTool.js": {
+            "summary": "This file provides descriptions for two file searching tools: a glob tool for file pattern matching and a ripgrep tool for content searching within files. It outlines their functionalities, supported patterns, and use cases.",
+            "keywords": [
+                "glob",
+                "ripgrep",
+                "file search",
+                "pattern matching",
+                "regex"
+            ],
+            "hash": "beda2a8d740db5c193ebe260266e7f9a4db773483bee1b449419167f2181b72d"
+        },
+        "claude-code/git_history.md": {
+            "summary": "This file outlines a system for identifying frequently modified core application files from a given list and returning a diverse selection of five filenames.",
+            "keywords": [
+                "git history",
+                "file modification",
+                "core application logic",
+                "diverse filenames",
+                "user interaction"
+            ],
+            "hash": "d90cea531e1914c1395e2d724514cf15c9a5aa9ce00e5ea7613b97a0ef7b1b60"
+        },
+        "claude-code/git.md": {
+            "summary": "This file provides a snapshot of the git status and file structure at the beginning of a conversation, indicating the current branch, main branch for pull requests, and recent commits without updates during the conversation.",
+            "keywords": [
+                "git status",
+                "current branch",
+                "main branch",
+                "recent commits",
+                "file structure"
+            ],
+            "hash": "b7b4d3aa4a31fbf47186a710f7a2fbcd6a62ec21945b3a98cd08ee4d6160b1da"
+        },
+        "claude-code/feedback.md": {
+            "summary": "This file provides instructions for generating a concise issue title based on user feedback, ensuring clarity and relevance.",
+            "keywords": [
+                "issue title",
+                "user feedback",
+                "guidelines",
+                "concise",
+                "system command"
+            ],
+            "hash": "0e7bed52ce1b4ad194a5e35ac1e976b9ff97149602ae4a18ff7b6d7ca792a5a7"
+        },
+        "claude-code/edit.md": {
+            "summary": "This file provides guidelines and instructions for a file editing tool, detailing how to edit existing files and create new ones, including critical requirements for proper usage.",
+            "keywords": [
+                "file editing",
+                "absolute path",
+                "old_string",
+                "new_string",
+                "context verification"
+            ],
+            "hash": "e2b2624f0fee2cb6ccebfd309004a77b0ea9296598f1da0dcbab4ca2dc21f16f"
+        },
+        "claude-code/context.md": {
+            "summary": "This file provides a template for inserting context elements into a user interaction, formatting context data into HTML for improved presentation.",
+            "keywords": [
+                "context formatting",
+                "HTML template",
+                "user interaction",
+                "context data",
+                "dynamic content"
+            ],
+            "hash": "92fa16acd0318777aedfa3f86bc62c65f6a7b0472d85ab90e3a5e1174437d058"
+        },
+        "claude-code/claude.md": {
+            "summary": "This file serves as a guide for creating or improving the CLAUDE.md documentation, focusing on build, lint, test commands, and code style guidelines for the repository's coding agents.",
+            "keywords": [
+                "documentation",
+                "code style",
+                "testing",
+                "linting",
+                "conventions"
+            ],
+            "hash": "bb8edb24d2a5fccc772a56754ef3fdf6a03f6cd6ec3030eb8430105c297db176"
+        },
+        "claude-code/chat_title.md": {
+            "summary": "This file contains instructions for analyzing messages to determine if they indicate a new conversation topic and to extract a relevant title if they do.",
+            "keywords": [
+                "conversation topic",
+                "JSON response",
+                "message analysis",
+                "title extraction",
+                "isNewTopic"
+            ],
+            "hash": "ca4a44f5dfeb460d2ffe545630645547ba9140c529237f896f1d260494ea9ba9"
         }
     },
     "prompts": []

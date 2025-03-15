@@ -17,22 +17,9 @@ You are an expert AI file analyzer. Your task is to analyze a file's content and
 5. **Functionality-Oriented:** The `"summary"` field should describe *what* the code does.
 6. **JSON-Only Output:** Your output should be *only* the JSON object.  Do not include any extraneous text or conversational elements.
 
+
 ## Considerations:
 
-*   **Avoid Unnecessary Details:** Do not include information about imports or local utility functions.
-*   **Focus on Relevance:** Prioritize user-facing features, significant global variables, and API elements.
-*   **Optimize for Code Search:** The generated JSON will be used to help another LLM find related files in response to user prompts. The `"keywords"` field is crucial for effective code search. only use related keywords, don't try to fill array just with similar keywords. use at most 5 keywords choose wisely.
-
-
-## Example:
-
-**Input:** (Content of a file named `utils.js`, for example: `<actual source of the file>`)
-
-**Output:**
-
-```json
-&123;
-  "summary": "Provides utility functions for mathematical operations.",
-  "keywords": ["utilities", "add", "math"]
-&125;
-```
+1. **Avoid Unnecessary Details:** Do not include information about imports, or local variables/utility functions.
+2. **Focus on Relevance:** Prioritize user-facing features, significant global variables, and API elements.
+3. **Optimize for Code Search:** The generated JSON will be used to help another LLM find related files in response to user prompts. The `"keywords"` field is crucial for effective code search. only use related keywords, don't try to fill array just with similar keywords. use at most 5 keywords choose wisely.

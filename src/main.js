@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import 'dotenv/config'
 
+import crypto from 'crypto'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { ChatOpenAI } from '@langchain/openai'
 import { glob } from "glob";
-import { existsSync, readFileSync, statSync, writeFileSync } from "fs";
+import { createReadStream, existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs";
 import { dirname, join } from 'path'
 import { fileURLToPath } from "url";
 import { program } from 'commander';
@@ -20,7 +21,7 @@ program
   .command('index')
   .description('Indexes files in a project.')
   .option('--project <path>', 'Path to the project', process.cwd())
-  .option('--files <paths>', 'Comma-separated list of files to index', "**/*") 
+  .option('--files <paths>', 'Comma-separated list of files to index', "**/*")
   .action((options) => {
     const projectPath = options.project;
     const files = options.files;
@@ -35,11 +36,11 @@ program
       process.exit(1);
     }
 
-    if(files) {
+    if (files) {
       index(projectPath, files);
     }
-    
-    
+
+
   });
 
 // Run Mode
@@ -80,7 +81,7 @@ program.parse(process.argv);
 
 const llm = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  model: process.env.OPENAI_MODEL
+  model: 'openai/gpt-4o-mini'
 })
 
 let patterns = "";
@@ -117,17 +118,26 @@ async function summarizeFile(file) {
     return result;
   } catch (error) {
     console.error(`Error processing file ${file}:`, error);
-      return {keywords: [], summary: "Couldn't generate summary. CHECK file based on it's name."}; // Or throw the error, depending on your error handling strategy
+    return { keywords: [], summary: "Couldn't generate summary. CHECK file based on it's name." }; // Or throw the error, depending on your error handling strategy
   }
 }
 
 async function index(projectPath, patterns) {
   const patternArray = patterns.split(",").map((pattern) => pattern.trim());
   let files = [];
-  
+
+  const defaultIgnoreList = [
+    "node_modules/**",
+    ".git",
+  ]
+  let gitignore = []
   for (var pattern of patternArray) {
+    const gitignoreFile = path.join(projectPath, '.gitignore')
+    if(existsSync(gitignoreFile)) {
+      gitignore = readFileSync(gitignoreFile, 'utf-8').split('\n')
+    }
     const matches = await glob(pattern, {
-      ignore: "node_modules/**",
+      ignore: [...defaultIgnoreList, ...gitignore],
       absolute: false,
       cwd: projectPath,
       posix: true,
@@ -141,21 +151,36 @@ async function index(projectPath, patterns) {
     }
   }
 
-  const memory = {};
+  let memory = {};
 
-  for (const file of files) {
-    console.log(`Processing file: ${file}`);
-    const result = await summarizeFile(path.join(projectPath, file));
-    if (result) {
-      memory[file] = result;
+  if (existsSync(path.join(projectPath, '.llm-index.json'))) {
+    try {
+      let result = JSON.parse(readFileSync(path.join(projectPath, '.llm-index.json') ?? '{}', 'utf8'))
+      memory = result.files
+    } catch (err) {
+      memory = {}
     }
   }
 
-  try {
-    writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify({ files: memory, prompts: [] }, null, 4));
-    console.log("Index file created successfully.");
-  } catch (writeError) {
-    console.error("Error writing to .llm-index.json:", writeError);
+  for (const file of files) {
+    console.log(`Processing file: ${file}`);
+    const fileHash = await getHash(path.join(projectPath, file))
+    if (Object.keys(memory).find(x => memory[x].hash === fileHash)) {
+      // file exists
+    } else {
+      const result = await summarizeFile(path.join(projectPath, file));
+      if (result) {
+        result.hash = fileHash
+        memory[file] = result;
+
+        try {
+          writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify({ files: memory, prompts: [] }, null, 4));
+          console.log("file indexed successfully.");
+        } catch (writeError) {
+          console.error("Error writing to .llm-index.json:", writeError);
+        }
+      }
+    }
   }
 }
 
@@ -191,7 +216,6 @@ async function runPrompt(name, userPrompt, context) {
   const promptPath = join(__dirname, `../prompts/${name}.md`); // Assuming prompts are .txt files
 
   try {
-    console.log('[prompt]', name, userPrompt)
     const content = readFileSync(promptPath, 'utf-8');
 
     const messagesTemplate = ChatPromptTemplate.fromMessages([
@@ -209,6 +233,7 @@ async function runPrompt(name, userPrompt, context) {
       res.content.toString().replace('```json', '').replace('```', '').trim()
     )
 
+    console.log({ result })
     return JSON.parse(result)
   } catch (error) {
     console.log(error)
@@ -237,17 +262,68 @@ ${file.content}
   return runPrompt('main-execute', prompt, context)
 }
 
+const commands = [{
+  name: 'Write',
+  arguments: ['file', 'search', 'replace'],
+  description: 'Writes content to a file',
+  notes: [
+    `- When editing a file, search is the existing text in the code which should be unique, if there is multiple similar section, add some lines before and after to make it unique.`,
+    `- To create a new file, search should be empty string and file should be unique across the repo. don't use existing file name.`,
+    `- To delete a file, search and replace both should be empty string`,
+    `- To move a section of code from one file to another file, use 2 Write command to remove code from file1 and write code to file2`,
+    `- Do not remove comments or other less important elements if user doidn't asked`,
+    `- Ensure search text is unique, to be sure you can add two lines before and two lines after, and include those lines in replace section too.`
+
+  ],
+  async handler({ file, search, replace }, {projectPath}) {
+    // confirm changes
+    // writeFileSync(path.join(projectPath, file), command.value);
+    // savePrompt(projectPath, prompt)
+    const filepath = path.join(projectPath, file)
+
+    if (!search && replace) {
+      // create file
+      console.log("[Created file]: ", filepath);
+
+      writeFileSync(filepath, replace);
+    }
+    if (!search && !replace) {
+      // create file
+      console.log("[Removed file]: ", filepath);
+
+      rmSync(filepath)
+    }
+
+    if (search) {
+      // create file
+      console.log("[Updated file]: ", filepath);
+
+      const content = readFileSync(filepath, 'utf-8')
+      writeFileSync(filepath, content.replace(search, replace))
+      // rmSync(filepath)
+    }
+    await indexFile(projectPath, file);
+  }
+}, {
+  name: 'Echo',
+  arguments: ['message'],
+  description: 'Write message to console for the user.',
+  notes: [
+    `- Messages should be concise and not long. at most one paragraph. if you want to write long message, use multiple Echo blocks`,
+    `- one usage of this command is when user should do some action like installing dependencies or running shell commands`,
+  ],
+  async handler({ message }, {projectPath}) {
+    console.log('[Echo] ' + message)
+  }
+}]
+
+const commands_str = commands.map(command => `
+* ${command.name}(${command.arguments.join(', ')}) - ${command.description}
+${command.notes.map(note => `- ` + note).join('\n')}
+`).join('\n')
+
 async function run(projectPath, prompt) {
   const memory = readMemory(projectPath);
-
-  const commands = `
-    * Write(file, value) - Writes content to a file.
-      - **Appending to a File (Adding):**  If the file already exists and you want to *add* content (e.g., at the beginning, end, or specific line), *always* include the **entire existing content** of the file *along with* the new content you want to add.  Integrate the new content into the existing content, adding it in the desired location (e.g., before, after, or in between existing lines). The 'value' should be the full, combined content.  The LLM MUST infer existing content to include when adding a new line.
-      - **Updating Part of a File (Modifying):** To update a section, *always* include the **full, updated content** of the file. Identify the section with modifications and replace just that part while retianing other content.  Avoid providing the entire original contents unless absolutely necessary. Focus on the *specific* changes needed, remember all lines should be there after update.
-      - **Overwriting the Entire File (Replacing):** If you intend to completely *replace* the file with new content, include the entire new content in the 'value', and specify that you are intended to replace content.
-  
-    * Echo(message) - Communicates information to the user.  Use this to provide instructions, relay messages, or ask the user to run shell commands.
-    `;
 
   const filesResponse = await getRequiredFiles(memory, prompt);
   console.log("LLM needs these files: ", filesResponse.files);
@@ -256,19 +332,12 @@ async function run(projectPath, prompt) {
     files.push({ name: file, content: readFileSync(path.join(projectPath, file), "utf-8") });
   }
 
-  const result = await executePrompt(memory, files, commands, prompt);
+  const result = await executePrompt(memory, files, commands_str, prompt);
 
   for (let command of result.commands) {
-    if (command.command == "Write") {
-      writeFileSync(path.join(projectPath, command.file), command.value);
-      console.log("[Write]: ", path.join(projectPath, command.file));
-      savePrompt(projectPath, prompt)
-      indexFile(projectPath, command.file);
-
-    }
-    if (command.command == "Echo") {
-      console.log("[ECHO]: " + command.message);
-    }
+    const handler = commands.find(x => x.name === command.command).handler
+    await handler(command, {projectPath})
+    await savePrompt(projectPath, prompt)
   }
 }
 
@@ -288,20 +357,27 @@ async function savePrompt(projectPath, prompt) {
 
 async function indexFile(projectPath, file) {
   try {
-    const fileSummary = await summarizeFile(path.join(projectPath, file));
-    const memory = JSON.parse(readFileSync(path.join(projectPath, ".llm-index.json"), "utf-8"));
-    memory.files[file] = fileSummary;
-    writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify(memory, null, 4));
-  
-  } catch(error) {
+    let memory = JSON.parse(readFileSync(path.join(projectPath, ".llm-index.json"), "utf-8"));
 
-    return {keywords: [], summary: "Couldn't generate summary. CHECK file based on it's name."}; // Or throw the error, depending on your error handling strategy
+    if (!existsSync(path.join(projectPath, file))) {
+      delete memory.files[file];
+    } else {
+      const fileSummary = await summarizeFile(path.join(projectPath, file));
+      memory.files[file] = fileSummary;
+    }
+    writeFileSync(path.join(projectPath, ".llm-index.json"), JSON.stringify(memory, null, 4));
+  } catch (error) {
+    // return { keywords: [], summary: "Couldn't generate summary. CHECK file based on it's name." }; // Or throw the error, depending on your error handling strategy
   }
 
 }
 
-// if (mode == "index") {
-//   index();
-// } else if (mode == "run") {
-//   run();
-// }
+function getHash(path) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha256');
+    const rs = createReadStream(path);
+    rs.on('error', reject);
+    rs.on('data', chunk => hash.update(chunk));
+    rs.on('end', () => resolve(hash.digest('hex')));
+  })
+}

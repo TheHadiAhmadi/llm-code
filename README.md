@@ -1,49 +1,51 @@
 # LLM Code Project
-This project aims to assist developers in understanding a codebase using a language model (LLM), providing functionalities like code review, documentation generation, code writing, and completion. The project focuses on enhancing developer productivity through automated tools and AI assistance.
+This project is a command-line interface (CLI) tool designed for indexing project files and performing prompt-based tasks using AI language models.
 
 ## Features
-- Comprehensive code indexing for better comprehension.
-- Code review capabilities using AI.
-- Automatic documentation generation.
-- User prompts for tailored assistance.
+- **Indexing:** Efficiently indexes project files, extracting key elements and generating summaries.
+- **Task Execution:** Executes user-defined prompts against the indexed files for documentation generation, code reviews, and more.
 
-## Getting Started
-### Prerequisites
-- Node.js installed on your machine.
-- Package dependencies are managed via npm.
+## Installation
+To get started, you can create empty nodejs project `npm init -y`then install llm-code:
 
-### Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/TheHadiAhmadi/llm-code.git
-   cd llm-code
-   ```
-2. Install the dependencies:
-   ```bash
-   npm install
-   ```
-
-## Usage
-To start the application, run:
-```bash
-node src/main.js
+```
+npm install git+https://github.com/TheHadiAhmadi/llm-code.git
 ```
 
-## Future Improvements and Roadmap
-- [x] Enhance AI model for better code comprehension and context understanding.
-- [x] Implement real-time collaboration tools for multiple developers.
-- [x] Introduce support for additional programming languages in code reviews and completion.
-- [x] Optimize performance and reduce response times for generating documentation.
-- [ ] Expand user interface for easier interaction with the LLM.
-- [x] Enhance AI model for better code comprehension.
-- [x] Implement real-time code reviews.
-- [x] Expand documentation generation features.
-- [x] Improve user prompt handling for enhanced interaction.
+## Usage
 
-## Contributing
-Contributions are welcome! Please create an issue or submit a pull request for any changes you'd like to propose.
+
+### Indexing Files
+To index files in your project, use the following command:
+
+```
+npx llm-code index --project <path> --files <patterns>
+```
+
+### Running Tasks
+To run a task with a prompt, execute:
+```
+npx llm-code run --project <path> --prompt "<your prompt>"
+```
+
+## Project Structure
+- **src/main.js:** Contains the core functionality for indexing and executin
+g tasks.
+- **prompts/:** Directory housing prompt templates used for task execution.
+
+## Requirements
+- Node.js
+- OpenAI API Key
+
+## Installation
+To get started, clone the
+repository and install dependencies:
+```
+npm install
+```
+
+## Contribution
+Contributions are welcome! Please submit a pull request or open an issue for discussion.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-*Note: This README has been generated and updated by the LLM Code Project tool.*
+This project is licensed under the MIT License.

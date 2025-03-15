@@ -28,6 +28,7 @@
     "dotenv": "^16.4.7",
     "glob": "^11.0.1",
     "langchain": "^0.3.19",
-    "openai": "^4.86.2"
+    "openai": "^4.86.2",
+    "prompt-confirm": "^2.0.4"
   }
 }
