@@ -1,15 +1,15 @@
 {
     "files": {
         "src/main.js": {
-            "summary": "This file defines a CLI tool for indexing project files and executing tasks based on user prompts using a language model. It supports operations to index files and run commands with contextual prompts, utilizing OpenAI's Chat API for analysis and task execution.",
+            "summary": "This file implements a CLI tool for indexing project files and executing tasks using prompts via large language models. It allows users to index files based on patterns and run tasks with specified prompts, integrating functionality for file management, summarization, and execution via language models.",
             "keywords": [
                 "CLI",
                 "indexing",
                 "prompt execution",
-                "file handling",
-                "OpenAI"
+                "file management",
+                "language models"
             ],
-            "hash": "0df558eaf34f8b5252a6e91a5cbe0a39ab80e7448e9bd6c9ee04c616e74c275f"
+            "hash": "5bb5eff80a9229448f9c241d464da876f6c28f9e92d81fda9abe9b0a617eb01b"
         },
         "TASKS.md": {
             "summary": "The file outlines a project for a coding assistant that helps developers understand codebases by performing tasks such as code review, documentation generation, and code completion. It includes steps to index project files, analyze user prompts, and structure outputs for an AI model.",
@@ -23,15 +23,12 @@
             "hash": "07d17fa72c356798cb3b6041ae2461de5a4e82df2fa155916e06e12a8824bf0f"
         },
         "package.json": {
-            "summary": "This file serves as the package descriptor for the 'llm-code' project, detailing metadata such as the main script, dependencies, and repository information for managing the module's lifecycle and integrating with external resources.",
+            "summary": "This file contains information about the package `llm-code`.",
             "keywords": [
-                "llm-code",
-                "module",
-                "dependencies",
-                "repository",
-                "scripts"
+                "package",
+                "llm-code"
             ],
-            "hash": "f3805a93250777eb63ab3d4969764d2570226973f9cda9a3eac08060cdadd146"
+            "hash": "6b7914948c87ab00227ba8e6445f8d421c8b765324b975a3c58a4c0f0e0bd656"
         },
         "package-lock.json": {
             "summary": "Manages Node.js project dependencies for a CLI tool integrating AI language models via LangChain and OpenAI.",

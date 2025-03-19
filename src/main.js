@@ -4,6 +4,7 @@ import 'dotenv/config'
 import crypto from 'crypto'
 import { ChatPromptTemplate } from '@langchain/core/prompts'
 import { ChatOpenAI } from '@langchain/openai'
+import { ChatOllama } from '@langchain/ollama'
 import { glob } from "glob";
 import { createReadStream, existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs";
 import { dirname, join } from 'path'
@@ -78,11 +79,15 @@ program
 program.parse(process.argv);
 
 
+const ollama = new ChatOllama({
+    model: 'qwen2.5-coder:1.5b'
+})
 
-const llm = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+const openai = new ChatOpenAI({
   model: 'openai/gpt-4o-mini'
 })
+
+const llm = openai
 
 let patterns = "";
 let mode = "";
@@ -102,6 +107,13 @@ if (args.includes("index")) {
 
 
 async function summarizeFile(file) {
+  /**
+   * Summarizes a file by analyzing its content.
+   * 
+   * @param {string} file - The path to the file to be summarized.
+   * @returns {Promise<Object>} - A promise that resolves with an object containing keywords and summary,
+   * or null if the file processing was skipped due to prompt failure.
+   */
   try {
     const content = readFileSync(file, "utf-8");
 
@@ -123,6 +135,14 @@ async function summarizeFile(file) {
 }
 
 async function index(projectPath, patterns) {
+  /**
+   * Indexes files in a project based on the provided patterns.
+   * 
+   * @param {string} projectPath - The path to the project to index.
+   * @param {string} patterns - Comma-separated list of file patterns to include in indexing.
+   * @returns {Promise<void>} - A promise that resolves when indexing is complete.
+   * This function processes each file matching the patterns, verifies its existence and size, and updates the project's index accordingly.
+   */
   const patternArray = patterns.split(",").map((pattern) => pattern.trim());
   let files = [];
 
