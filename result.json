@@ -1,0 +1,8 @@
+{
+    "versions": [
+        {
+            "content": "# BlockRepository Class\n\nThe `BlockRepository` class provides functionality to interact with the MongoDB database for `Block` entities.\n\n## Namespace\n\n```csharp\nFluentCMS.Repositories.MongoDB\n```\n\n## Inheritance\n\nInherits from:\n- `SiteAssociatedRepository<Block>`\n\nImplements:\n- `IBlockRepository`\n\n## Constructor\n\n```csharp\npublic BlockRepository(IMongoDBContext mongoDbContext, IApiExecutionContext apiExecutionContext)\n```\n\n### Parameters\n- **IMongoDBContext mongoDbContext**: An instance of `IMongoDBContext` that is responsible for database operations.\n- **IApiExecutionContext apiExecutionContext**: An instance of `IApiExecutionContext` that holds the context for API execution.\n\n## Summary\n\nThe `BlockRepository` class encapsulates all database operations related to `Block` objects while being associated with a particular site context. This class leverages MongoDB for data persistence and retrieval.",
+            "feedbacks": []
+        }
+    ]
+}
